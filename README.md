@@ -1,1 +1,2 @@
-# detraces
+# Detraces
+Detraces is a proof of concept that demostrates the use of Microsoft Research's [Detours](https://github.com/microsoft/Detours) package to replicate, to some extent, the behavior of Linux tools like `strace` or `ltrace` on Windows.
