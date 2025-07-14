@@ -16,14 +16,15 @@
 #include <strsafe.h>
 #pragma warning(pop)
 
+#define DETRACES_DLL "detraces.dll"
+
 //////////////////////////////////////////////////////////////////////////////
 //
 void PrintUsage(void)
 {
     printf("Usage:\n"
-           "    withdll.exe [options] [command line]\n"
+           "    detraces.exe [options] [command line]\n"
            "Options:\n"
-           "    /d:file.dll   : Start the process with file.dll.\n"
            "    /v            : Verbose, display memory at start.\n"
            "    /?            : This help screen.\n");
 }
@@ -379,18 +380,6 @@ int CDECL main(int argc, char **argv)
             *argp++ = '\0';
 
         switch (argn[0]) {
-          case 'd':                                     // Set DLL Name
-          case 'D':
-            if (nDlls < ARRAYSIZE(rpszDllsRaw)) {
-                rpszDllsRaw[nDlls++] = argp;
-            }
-            else {
-                printf("withdll.exe: Too many DLLs.\n");
-                fNeedHelp = TRUE;
-                break;
-            }
-            break;
-
           case 'v':                                     // Verbose
           case 'V':
             fVerbose = TRUE;
@@ -402,7 +391,7 @@ int CDECL main(int argc, char **argv)
 
           default:
             fNeedHelp = TRUE;
-            printf("withdll.exe: Bad argument: %s\n", argv[arg]);
+            printf("detraces.exe: Bad argument: %s\n", argv[arg]);
             break;
         }
     }
@@ -411,9 +400,8 @@ int CDECL main(int argc, char **argv)
         fNeedHelp = TRUE;
     }
 
-    if (nDlls == 0) {
-        fNeedHelp = TRUE;
-    }
+    nDlls = 1;
+    rpszDllsRaw[0] = DETRACES_DLL;
 
     if (fNeedHelp) {
         PrintUsage();
@@ -427,7 +415,7 @@ int CDECL main(int argc, char **argv)
         PCHAR pszFilePart = NULL;
 
         if (!GetFullPathNameA(rpszDllsRaw[n], ARRAYSIZE(szDllPath), szDllPath, &pszFilePart)) {
-            printf("withdll.exe: Error: %s is not a valid path name..\n",
+            printf("detraces.exe: Error: %s is not a valid path name..\n",
                    rpszDllsRaw[n]);
             return 9002;
         }
@@ -439,7 +427,7 @@ int CDECL main(int argc, char **argv)
 
         HMODULE hDll = LoadLibraryExA(rpszDllsOut[n], NULL, DONT_RESOLVE_DLL_REFERENCES);
         if (hDll == NULL) {
-            printf("withdll.exe: Error: %s failed to load (error %ld).\n",
+            printf("detraces.exe: Error: %s failed to load (error %ld).\n",
                    rpszDllsOut[n],
                    GetLastError());
             return 9003;
@@ -452,7 +440,7 @@ int CDECL main(int argc, char **argv)
         FreeLibrary(hDll);
 
         if (!ec.fHasOrdinal1) {
-            printf("withdll.exe: Error: %s does not export ordinal #1.\n",
+            printf("detraces.exe: Error: %s does not export ordinal #1.\n",
                    rpszDllsOut[n]);
             printf("             See help entry DetourCreateProcessWithDllEx in Detours.chm.\n");
             return 9004;
@@ -488,9 +476,9 @@ int CDECL main(int argc, char **argv)
             StringCchCatA(szCommand, sizeof(szCommand), " ");
         }
     }
-    printf("withdll.exe: Starting: `%s'\n", szCommand);
+    printf("detraces.exe: Starting: `%s'\n", szCommand);
     for (DWORD n = 0; n < nDlls; n++) {
-        printf("withdll.exe:   with `%s'\n", rpszDllsOut[n]);
+        printf("detraces.exe:   with `%s'\n", rpszDllsOut[n]);
     }
     fflush(stdout);
 
@@ -502,12 +490,12 @@ int CDECL main(int argc, char **argv)
                                      NULL, NULL, TRUE, dwFlags, NULL, NULL,
                                      &si, &pi, nDlls, rpszDllsOut, NULL)) {
         DWORD dwError = GetLastError();
-        printf("withdll.exe: DetourCreateProcessWithDllEx failed: %ld\n", dwError);
+        printf("detraces.exe: DetourCreateProcessWithDllEx failed: %ld\n", dwError);
         if (dwError == ERROR_INVALID_HANDLE) {
 #if DETOURS_64BIT
-            printf("withdll.exe: Can't detour a 32-bit target process from a 64-bit parent process.\n");
+            printf("detraces.exe: Can't detour a 32-bit target process from a 64-bit parent process.\n");
 #else
-            printf("withdll.exe: Can't detour a 64-bit target process from a 32-bit parent process.\n");
+            printf("detraces.exe: Can't detour a 64-bit target process from a 32-bit parent process.\n");
 #endif
         }
         ExitProcess(9009);
@@ -523,7 +511,7 @@ int CDECL main(int argc, char **argv)
 
     DWORD dwResult = 0;
     if (!GetExitCodeProcess(pi.hProcess, &dwResult)) {
-        printf("withdll.exe: GetExitCodeProcess failed: %ld\n", GetLastError());
+        printf("detraces.exe: GetExitCodeProcess failed: %ld\n", GetLastError());
         return 9010;
     }
 
