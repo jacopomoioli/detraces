@@ -14,5 +14,7 @@ Detraces can now intercept and show calls to the following functions:
     - GetForegroundWindow
     - GetWindowTextA
     - MessageBoxA
+- File API
+    - CreateFileA
 
 After the initial PoC stage, the goal will be to implement function call tracing in a scalable and dynamic way.
