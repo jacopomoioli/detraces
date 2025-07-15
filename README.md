@@ -17,5 +17,6 @@ Detraces can now intercept and show calls to the following functions:
 - File API
     - CreateFileA
     - WriteFile
+    - ReadFile
 
 After the initial PoC stage, the goal will be to implement function call tracing in a scalable and dynamic way.
