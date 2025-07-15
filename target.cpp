@@ -12,6 +12,8 @@ int main() {
     const char* fileName = "testfile.txt";
     const char* newFileName = "renamedfile.txt";
     const char* fileContent = "This is sample text written to the file.\n";
+    char buffer[1024];
+    DWORD bytesRead;
 
     // Get the handle of the foreground window
     hwnd = GetForegroundWindow();
@@ -55,6 +57,22 @@ int main() {
     }
 
     printf("Wrote %lu bytes to %s\n", bytesWritten, fileName);
+
+    CloseHandle(hFile);
+
+    hFile = CreateFileA(
+        fileName,                
+        GENERIC_READ,           
+        FILE_SHARE_READ,                       
+        NULL,                    
+        OPEN_EXISTING,           
+        FILE_ATTRIBUTE_NORMAL,   
+        NULL);
+
+    ReadFile(hFile, buffer, sizeof(buffer)-1, &bytesRead, NULL);
+    buffer[bytesRead] = '\0';
+    
+    printf("%s\n", buffer);
 
     CloseHandle(hFile);
 

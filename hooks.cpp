@@ -15,7 +15,8 @@ int (WINAPI * pMessageBox)(
 	UINT uType
 ) = MessageBox;
 
-HWND (WINAPI * pGetForegroundWindow)() = GetForegroundWindow;
+HWND (WINAPI * pGetForegroundWindow)(
+) = GetForegroundWindow;
 
 int (WINAPI * pGetWindowTextA)(
 	HWND hWnd, 
@@ -41,6 +42,14 @@ BOOL (WINAPI * pWriteFile) (
   LPOVERLAPPED lpOverlapped
 ) = WriteFile;
 
+BOOL (WINAPI * pReadFile) (
+  HANDLE hFile,
+  LPVOID lpBuffer,
+  DWORD nNumberOfBytesToRead,
+  LPDWORD lpNumberOfBytesRead,
+  LPOVERLAPPED lpOverlapped
+) = ReadFile;
+
 BOOL (WINAPI * pCloseHandle) (
   HANDLE hObject
 ) = CloseHandle;
@@ -50,23 +59,28 @@ BOOL (WINAPI * pDeleteFileA)(
 ) = DeleteFileA;
 
 
-int HookedMessageBox(HWND hWnd, LPCTSTR lpText, LPCTSTR lpCaption, UINT uType) {
+int HookedMessageBox(
+	HWND hWnd, 
+	LPCTSTR lpText, 
+	LPCTSTR lpCaption, 
+	UINT uType
+) {
 	int returnValue;
-	printf("MessageBox(0x%p, %s, %s, %d)\n", hWnd, lpText, lpCaption, uType);
+	printf("[!] MessageBox(0x%p, %s, %s, %d)\n", hWnd, lpText, lpCaption, uType);
 	returnValue = pMessageBox(hWnd, lpText, lpCaption, uType);
 	return returnValue;
 }
 
 HWND HookedGetForegroundWindow(){
 	HWND returnValue;
-	printf("GetForegroundWindow()\n");
+	printf("[!] GetForegroundWindow()\n");
 	returnValue = pGetForegroundWindow();
 	return returnValue;
 }
 
 int HookedGetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount){
 	int returnValue;
-	printf("GetWindowTextA(0x%p, 0x%p, %d)\n", hWnd, lpString, nMaxCount);
+	printf("[!] GetWindowTextA(0x%p, 0x%p, %d)\n", hWnd, lpString, nMaxCount);
 	returnValue = pGetWindowTextA(hWnd, lpString, nMaxCount);
 	return returnValue;
 }
@@ -81,7 +95,7 @@ HANDLE HookedCreateFileA (
 	HANDLE hTemplateFile
 ){
 	HANDLE returnValue;
-	printf("CreateFileA(%s, 0x%x, 0x%x, 0x%p, 0x%p, 0x%p, 0x%p)\n", lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+	printf("[!] CreateFileA(%s, 0x%x, 0x%x, 0x%p, 0x%p, 0x%p, 0x%p)\n", lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 	returnValue = pCreateFileA(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 	return returnValue;
 }
@@ -94,24 +108,42 @@ BOOL HookedWriteFile (
   LPOVERLAPPED lpOverlapped
 ){
 	BOOL returnValue;
-	printf("WriteFile(0x%p, %s, %d, %d, 0x%x)\n", hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
+	printf("[!] WriteFile(0x%p, %.*s, %d, %d, 0x%x)\n", hFile, nNumberOfBytesToWrite, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
 	returnValue = pWriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
 	return returnValue;
 }
 
-/*
+BOOL HookedReadFile (
+	HANDLE hFile,
+  	LPVOID lpBuffer,
+  	DWORD nNumberOfBytesToRead,
+  	LPDWORD lpNumberOfBytesRead,
+  	LPOVERLAPPED lpOverlapped
+) {
+	BOOL returnValue;
+	printf("[!] ReadFile(0x%p, 0x%p, %d, 0x%p, 0x%x)\n", hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+	returnValue = pReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+	return returnValue;
+}
+
 BOOL HookedCloseHandle (
   HANDLE hObject
 ){
-
+	BOOL returnValue;
+	printf("[!] CloseHandle(0x%p)\n", hObject);
+	returnValue = CloseHandle(hObject);
+	return returnValue;
 }
 
 BOOL HookedDeleteFileA(
   LPCSTR lpFileName
 ){
-
+	BOOL returnValue;
+	printf("[!] DeleteFileA(%s)\n", lpFileName);
+	returnValue = DeleteFileA(lpFileName);
+	return returnValue;	
 }
-*/
+
 
 int AttachHooks(){
 	DetourAttach(&(PVOID&)pMessageBox, HookedMessageBox);
@@ -119,6 +151,9 @@ int AttachHooks(){
 	DetourAttach(&(PVOID&)pGetWindowTextA, HookedGetWindowTextA);
 	DetourAttach(&(PVOID&)pCreateFileA, HookedCreateFileA);
 	DetourAttach(&(PVOID&)pWriteFile, HookedWriteFile);
+	DetourAttach(&(PVOID&)pReadFile, HookedReadFile);
+	//DetourAttach(&(PVOID&)pCloseHandle, HookedCloseHandle);
+	//DetourAttach(&(PVOID&)pDeleteFileA, HookedDeleteFileA);
 	return 0;
 }
 
@@ -128,5 +163,8 @@ int DetachHooks(){
 	DetourDetach(&(PVOID&)pGetWindowTextA, HookedGetWindowTextA);
 	DetourDetach(&(PVOID&)pCreateFileA, HookedCreateFileA);
 	DetourDetach(&(PVOID&)pWriteFile, HookedWriteFile);
+	DetourDetach(&(PVOID&)pReadFile, HookedReadFile);
+	//DetourAttach(&(PVOID&)pCloseHandle, HookedCloseHandle);
+	//DetourAttach(&(PVOID&)pDeleteFileA, HookedDeleteFileA);
 	return 0;
 }
