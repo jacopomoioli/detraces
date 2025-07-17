@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <windows.h>
+#include <ssphi.h>
 #include "hooks.h"
 #include "detours.h"
 
@@ -8,56 +9,13 @@
 int AttachHooks();
 int DetachHooks();
 
+// MessageBox
 int (WINAPI * pMessageBox)(
 	HWND hWnd, 
 	LPCTSTR lpText, 
 	LPCTSTR lpCaption, 
 	UINT uType
 ) = MessageBox;
-
-HWND (WINAPI * pGetForegroundWindow)(
-) = GetForegroundWindow;
-
-int (WINAPI * pGetWindowTextA)(
-	HWND hWnd, 
-	LPSTR lpString, 
-	int nMaxCount
-) = GetWindowTextA;
-
-HANDLE (WINAPI * pCreateFileA) (
-	LPCSTR lpFileName,
-	DWORD dwDesiredAccess,
-	DWORD dwShareMode,
-	LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-	DWORD dwCreationDisposition,
-	DWORD dwFlagsAndAttributes,
-	HANDLE hTemplateFile
-) = CreateFileA;
-
-BOOL (WINAPI * pWriteFile) (
-  HANDLE hFile,
-  LPCVOID lpBuffer,
-  DWORD nNumberOfBytesToWrite,
-  LPDWORD lpNumberOfBytesWritten,
-  LPOVERLAPPED lpOverlapped
-) = WriteFile;
-
-BOOL (WINAPI * pReadFile) (
-  HANDLE hFile,
-  LPVOID lpBuffer,
-  DWORD nNumberOfBytesToRead,
-  LPDWORD lpNumberOfBytesRead,
-  LPOVERLAPPED lpOverlapped
-) = ReadFile;
-
-BOOL (WINAPI * pCloseHandle) (
-  HANDLE hObject
-) = CloseHandle;
-
-BOOL (WINAPI * pDeleteFileA)(
-  LPCSTR lpFileName
-) = DeleteFileA;
-
 
 int HookedMessageBox(
 	HWND hWnd, 
@@ -71,6 +29,11 @@ int HookedMessageBox(
 	return returnValue;
 }
 
+
+// GetForegroundWindow
+HWND (WINAPI * pGetForegroundWindow)(
+) = GetForegroundWindow;
+
 HWND HookedGetForegroundWindow(){
 	HWND returnValue;
 	printf("[!] GetForegroundWindow()\n");
@@ -78,12 +41,32 @@ HWND HookedGetForegroundWindow(){
 	return returnValue;
 }
 
+
+// GetWindowTextA
+int (WINAPI * pGetWindowTextA)(
+	HWND hWnd, 
+	LPSTR lpString, 
+	int nMaxCount
+) = GetWindowTextA;
+
 int HookedGetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount){
 	int returnValue;
 	printf("[!] GetWindowTextA(0x%p, 0x%p, %d)\n", hWnd, lpString, nMaxCount);
 	returnValue = pGetWindowTextA(hWnd, lpString, nMaxCount);
 	return returnValue;
 }
+
+
+// CreateFileA
+HANDLE (WINAPI * pCreateFileA) (
+	LPCSTR lpFileName,
+	DWORD dwDesiredAccess,
+	DWORD dwShareMode,
+	LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+	DWORD dwCreationDisposition,
+	DWORD dwFlagsAndAttributes,
+	HANDLE hTemplateFile
+) = CreateFileA;
 
 HANDLE HookedCreateFileA (
 	LPCSTR lpFileName,
@@ -100,6 +83,16 @@ HANDLE HookedCreateFileA (
 	return returnValue;
 }
 
+
+// WriteFile
+BOOL (WINAPI * pWriteFile) (
+	HANDLE hFile,
+	LPCVOID lpBuffer,
+	DWORD nNumberOfBytesToWrite,
+	LPDWORD lpNumberOfBytesWritten,
+	LPOVERLAPPED lpOverlapped
+) = WriteFile;
+
 BOOL HookedWriteFile (
   HANDLE hFile,
   LPCVOID lpBuffer,
@@ -113,18 +106,34 @@ BOOL HookedWriteFile (
 	return returnValue;
 }
 
+
+// ReadFile
+BOOL (WINAPI * pReadFile) (
+  HANDLE hFile,
+  LPVOID lpBuffer,
+  DWORD nNumberOfBytesToRead,
+  LPDWORD lpNumberOfBytesRead,
+  LPOVERLAPPED lpOverlapped
+) = ReadFile;
+
 BOOL HookedReadFile (
 	HANDLE hFile,
-  	LPVOID lpBuffer,
-  	DWORD nNumberOfBytesToRead,
-  	LPDWORD lpNumberOfBytesRead,
-  	LPOVERLAPPED lpOverlapped
+	  LPVOID lpBuffer,
+	  DWORD nNumberOfBytesToRead,
+	  LPDWORD lpNumberOfBytesRead,
+	  LPOVERLAPPED lpOverlapped
 ) {
 	BOOL returnValue;
 	printf("[!] ReadFile(0x%p, 0x%p, %d, 0x%p, 0x%x)\n", hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
 	returnValue = pReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
 	return returnValue;
 }
+
+
+// CloseHandle
+BOOL (WINAPI * pCloseHandle) (
+  HANDLE hObject
+) = CloseHandle;
 
 BOOL HookedCloseHandle (
   HANDLE hObject
@@ -135,14 +144,43 @@ BOOL HookedCloseHandle (
 	return returnValue;
 }
 
-BOOL HookedDeleteFileA(
+
+// DeleteFileA
+BOOL (WINAPI * pDeleteFileA)(
   LPCSTR lpFileName
+) = DeleteFileA;
+
+
+BOOL HookedDeleteFileA(
+	LPCSTR lpFileName
 ){
 	BOOL returnValue;
 	printf("[!] DeleteFileA(%s)\n", lpFileName);
 	returnValue = DeleteFileA(lpFileName);
 	return returnValue;	
 }
+
+
+// SspiPrepareForCredRead
+SECURITY_STATUS SEC_ENTRY (WINAPI * pSspiPrepareForCredRead)(
+	PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthIdentity,
+	PCWSTR pszTargetName,
+	PULONG pCredmanCredentialType,
+	PCWSTR *ppszCredmanTargetName
+) = SspiPrepareForCredRead;
+
+SECURITY_STATUS SEC_ENTRY HookedSspiPrepareForCredRead(
+	PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthIdentity,
+	PCWSTR pszTargetName,
+	PULONG pCredmanCredentialType,
+	PCWSTR *ppszCredmanTargetName
+){
+	SECURITY_STATUS SEC_ENTRY returnValue;
+	printf("[!] SspiPrepareForCredRead(0x%p, %s, %d, %s)\n", AuthIdentity, pszTargetName, *pCredmanCredentialType, ppszCredmanTargetName);
+	returnValue = pSspiPrepareForCredRead(AuthIdentity, pszTargetName, pCredmanCredentialType, ppszCredmanTargetName);
+	return returnValue;
+}
+
 
 
 int AttachHooks(){
