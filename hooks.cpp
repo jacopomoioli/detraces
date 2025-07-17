@@ -1,10 +1,14 @@
+#define SECURITY_WIN32
+
 #include <stdio.h>
 #include <windows.h>
-#include <ssphi.h>
+#include <sspi.h>
 #include "hooks.h"
 #include "detours.h"
 
 #pragma comment(lib, "user32.lib")
+#pragma comment(lib, "Secur32.lib")
+
 
 int AttachHooks();
 int DetachHooks();
@@ -162,20 +166,20 @@ BOOL HookedDeleteFileA(
 
 
 // SspiPrepareForCredRead
-SECURITY_STATUS SEC_ENTRY (WINAPI * pSspiPrepareForCredRead)(
+SECURITY_STATUS (WINAPI * pSspiPrepareForCredRead)(
 	PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthIdentity,
 	PCWSTR pszTargetName,
 	PULONG pCredmanCredentialType,
 	PCWSTR *ppszCredmanTargetName
 ) = SspiPrepareForCredRead;
 
-SECURITY_STATUS SEC_ENTRY HookedSspiPrepareForCredRead(
+SECURITY_STATUS HookedSspiPrepareForCredRead(
 	PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthIdentity,
 	PCWSTR pszTargetName,
 	PULONG pCredmanCredentialType,
 	PCWSTR *ppszCredmanTargetName
 ){
-	SECURITY_STATUS SEC_ENTRY returnValue;
+	SECURITY_STATUS returnValue;
 	printf("[!] SspiPrepareForCredRead(0x%p, %s, %d, %s)\n", AuthIdentity, pszTargetName, *pCredmanCredentialType, ppszCredmanTargetName);
 	returnValue = pSspiPrepareForCredRead(AuthIdentity, pszTargetName, pCredmanCredentialType, ppszCredmanTargetName);
 	return returnValue;
