@@ -9,6 +9,15 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "Secur32.lib")
 
+void debugPrintf(const char *fmt, ...) {
+    char buffer[1024];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+	printf("%s\n", buffer);
+    OutputDebugStringA(buffer);
+}
 
 int AttachHooks();
 int DetachHooks();
@@ -28,7 +37,7 @@ int HookedMessageBox(
 	UINT uType
 ) {
 	int returnValue;
-	printf("[!] MessageBox(0x%p, %s, %s, %d)\n", hWnd, lpText, lpCaption, uType);
+	debugPrintf("[!] MessageBox(0x%p, %s, %s, %d)\n", hWnd, lpText, lpCaption, uType);
 	returnValue = pMessageBox(hWnd, lpText, lpCaption, uType);
 	return returnValue;
 }
@@ -40,7 +49,7 @@ HWND (WINAPI * pGetForegroundWindow)(
 
 HWND HookedGetForegroundWindow(){
 	HWND returnValue;
-	printf("[!] GetForegroundWindow()\n");
+	debugPrintf("[!] GetForegroundWindow()\n");
 	returnValue = pGetForegroundWindow();
 	return returnValue;
 }
@@ -55,7 +64,7 @@ int (WINAPI * pGetWindowTextA)(
 
 int HookedGetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount){
 	int returnValue;
-	printf("[!] GetWindowTextA(0x%p, 0x%p, %d)\n", hWnd, lpString, nMaxCount);
+	debugPrintf("[!] GetWindowTextA(0x%p, 0x%p, %d)\n", hWnd, lpString, nMaxCount);
 	returnValue = pGetWindowTextA(hWnd, lpString, nMaxCount);
 	return returnValue;
 }
@@ -82,7 +91,7 @@ HANDLE HookedCreateFileA (
 	HANDLE hTemplateFile
 ){
 	HANDLE returnValue;
-	printf("[!] CreateFileA(%s, 0x%x, 0x%x, 0x%p, 0x%p, 0x%p, 0x%p)\n", lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+	debugPrintf("[!] CreateFileA(%s, 0x%x, 0x%x, 0x%p, 0x%p, 0x%p, 0x%p)\n", lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 	returnValue = pCreateFileA(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 	return returnValue;
 }
@@ -105,7 +114,7 @@ BOOL HookedWriteFile (
   LPOVERLAPPED lpOverlapped
 ){
 	BOOL returnValue;
-	printf("[!] WriteFile(0x%p, %.*s, %d, %d, 0x%x)\n", hFile, nNumberOfBytesToWrite, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
+	debugPrintf("[!] WriteFile(0x%p, %.*s, %d, %d, 0x%x)\n", hFile, nNumberOfBytesToWrite, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
 	returnValue = pWriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
 	return returnValue;
 }
@@ -128,7 +137,7 @@ BOOL HookedReadFile (
 	  LPOVERLAPPED lpOverlapped
 ) {
 	BOOL returnValue;
-	printf("[!] ReadFile(0x%p, 0x%p, %d, 0x%p, 0x%x)\n", hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+	debugPrintf("[!] ReadFile(0x%p, 0x%p, %d, 0x%p, 0x%x)\n", hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
 	returnValue = pReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
 	return returnValue;
 }
@@ -143,7 +152,7 @@ BOOL HookedCloseHandle (
   HANDLE hObject
 ){
 	BOOL returnValue;
-	printf("[!] CloseHandle(0x%p)\n", hObject);
+	debugPrintf("[!] CloseHandle(0x%p)\n", hObject);
 	returnValue = CloseHandle(hObject);
 	return returnValue;
 }
@@ -159,7 +168,7 @@ BOOL HookedDeleteFileA(
 	LPCSTR lpFileName
 ){
 	BOOL returnValue;
-	printf("[!] DeleteFileA(%s)\n", lpFileName);
+	debugPrintf("[!] DeleteFileA(%s)\n", lpFileName);
 	returnValue = DeleteFileA(lpFileName);
 	return returnValue;	
 }
@@ -180,10 +189,11 @@ SECURITY_STATUS HookedSspiPrepareForCredRead(
 	PCWSTR *ppszCredmanTargetName
 ){
 	SECURITY_STATUS returnValue;
-	printf("[!] SspiPrepareForCredRead(0x%p, %s, %d, %s)\n", AuthIdentity, pszTargetName, *pCredmanCredentialType, ppszCredmanTargetName);
+	debugPrintf("[!] SspiPrepareForCredRead(0x%p, %s, %d, %s)\n", AuthIdentity, pszTargetName, *pCredmanCredentialType, ppszCredmanTargetName);
 	returnValue = pSspiPrepareForCredRead(AuthIdentity, pszTargetName, pCredmanCredentialType, ppszCredmanTargetName);
 	return returnValue;
 }
+
 
 
 
