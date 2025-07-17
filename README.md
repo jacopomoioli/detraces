@@ -5,7 +5,8 @@ This project is purely educational, it's just a way to get my hands dirty on Win
 
 ## Components
 - `detraces_hooking.cpp`: The actual API hooking code
-- `detraces_launcher.cpp`: Detours' [withdll.cpp](https://github.com/microsoft/Detours/blob/main/samples/withdll/withdll.cpp) with minimal modifications. Used to inject the `detraces_hooking` dll into the target process 
+- `detraces_launcher.cpp`: Detours' [withdll.cpp](https://github.com/microsoft/Detours/blob/main/samples/withdll/withdll.cpp) with minimal modifications. Used to start the target process and inject the `detraces_hooking` dll at launch
+- `detraces_injector.cpp`: Inject the `detraces_hooking.dll` into an already executing process
 - `target.cpp`: Just a sample target executable, used to test everything
 
 ## Actual Capabilities
