@@ -21,3 +21,10 @@ Detraces can now intercept and show calls to the following functions:
     - ReadFile
 
 After the initial PoC stage, the goal will be to implement function call tracing in a scalable and dynamic way.
+
+## The Past and the Future of this project
+After watching [this video by antirez](https://www.youtube.com/watch?v=1FW8uzTQGxs), I have changed my mind a bit about this "side project". 
+
+What's the point of developing something to learn, as I previously wrote, "Windows internals, API hooking and native, low level development", using a 25 years old library that does the very thing I'm trying to learn? 
+
+Hell no, being the best in using a library is something I can accomplish with 2 queries to ChatGPT. I want to be better than this. Following this commit, I'll try to implement detours myself. It will be orders of magnitude more difficult, and changces are that this project will go out of the window, but if I don't do this now, when?
